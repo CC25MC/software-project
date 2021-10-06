@@ -25,9 +25,9 @@ const LogInView = ({
   navigation,
   handleChangeForm,
   shouldEnableLogin,
-  rut,
+  email,
   password,
-  handleLogIn,
+  handleLogin,
   onEnterPress,
 }) => {
   return (
@@ -41,15 +41,29 @@ const LogInView = ({
       >
         <KeyboardAvoidingView behavior={"position"} keyboardVerticalOffset={82}>
           <Box w={"100%"}>
-            <Input mode="outlined" label="Correo" />
+            <Input
+              mode="outlined"
+              label="Correo"
+              onChangeText={(newValue) =>
+                handleChangeForm("email", newValue)
+              }
+              value={email}
+            />
             <Spacing top={15} />
-            <InputWithCensorToggle mode="outlined" label="Contraseña" />
+            <InputWithCensorToggle
+              mode="outlined"
+              label="Contraseña"
+              onChangeText={(newValue) =>
+                handleChangeForm("password", newValue)
+              }
+              value={password}
+            />
             <Spacing top={10} />
             <Touchable
               ml={15}
-              // onPress={() => {
-              //   navigation.navigate(URLS.formCompany);
-              // }}
+            // onPress={() => {
+            //   navigation.navigate(URLS.formCompany);
+            // }}
             >
               <Text color={Colors.primary}>
                 Recuperar Contraseña!!!
@@ -69,7 +83,7 @@ const LogInView = ({
           bw={4}
           disableHover
           onPress={() => {
-            navigation.navigate("SingUp");
+            handleLogin()
           }}
         >
           <Text mt={6} fontSize={16} color={Colors.primary} center>INGRESA</Text>

@@ -169,15 +169,15 @@ export const Header = ({
       scheme,
     });
   } else if (renderRight) {
-    rightContent = renderRight();
+    rightContent = renderRight;
   }
 
   // HACK: add extra item to center centerContent
   // only on mobile
   if (!brandLeft && (title || showBrand) && !isLargeScreen) {
-    if (!leftContent && rightContent) {
-      leftContent = <Hide>{rightContent}</Hide>;
-    } 
+    // if (!leftContent && rightContent) {
+    //   leftContent = <Hide>{rightContent}</Hide>;
+    // } 
     // else if (leftContent && !rightContent) {
     //   rightContent = <Hide>{leftContent}</Hide>;
     // }

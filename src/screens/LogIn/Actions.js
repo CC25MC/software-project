@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useAuth } from "@/hooks";
 
 const LogInActions = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
   const [values, setValues] = useState({
     password: "",
     email: "",
@@ -15,12 +18,11 @@ const LogInActions = ({ navigation }) => {
       [name]: newValue,
     });
 
-  const handleLogin = () => {
-    console.log(values);
-  };
   return {
     handleChangeForm,
-    handleLogin,
+    signIn,
+    loading, 
+    setLoading,
     navigation,
     password,
     email,

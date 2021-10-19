@@ -1,6 +1,6 @@
 import React, { useState, createContext } from "react";
 import { Appearance } from "react-native-appearance";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from 'react-native';
 
 import { getTheme } from "@/theme";
 

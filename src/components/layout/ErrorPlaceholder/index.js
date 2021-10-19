@@ -15,7 +15,7 @@ export const ErrorPlaceholder = ({
       notify.warning({
         title: error
       });
-      onShowError();
+      // onShowError();
     }
   }, [error]);
 

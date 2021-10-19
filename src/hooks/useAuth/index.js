@@ -1,74 +1,107 @@
-import { useDispatch, useSelector } from "react-redux";
-import { 
-  logIn, 
-  logOut, 
-  resetError, 
-  signUp, 
-  recoverPassword, 
-  authLogInAsGuest, 
-  hideOnboarding,
-  updateProfile
-} from "@/redux/ducks/auth";
-import {
-  useQueryClient
-} from "react-query";
-import { subMinutes } from "@/utils";
-import { useEffect } from "react";
-
-let inMemoryToken;
+import { supabase } from "../useSupabaseClient"
 
 export const useAuth = () => {
-  
-  const dispatch = useDispatch();
-  const queryClient = useQueryClient();
-  const state = useSelector(({ auth }) => auth);
 
-  useEffect( () => {
-    if(state.token){
-      inMemoryToken = {
-        value: state.token,
-        expiresIn: state.expiresIn,
-        expiresInDate: new Date( state.expiresIn * 1000 )
-      }
+
+    const signUp = async (email, password, phone, name, id, id_advice) => {
+        const data = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            data: { phone, name, cedula: id }
+        })
+        if (data?.user) {
+            const newRoom = await supabase
+                .from('Perfil')
+                .insert({ nombre_c: name, user_id: data?.user.id, cedula: id, phone: phone, id_consejo: id_advice });
+            console.log(newRoom);
+        }
+        return {
+            user: data?.user,
+            error: data?.error
+        }
+    };
+
+    const signIn = async (email, password) => {
+        const { user, error } = await supabase.auth.signIn({
+            email: email,
+            password: password
+        })
+        return {
+            user, error
+        }
+    };
+
+    const user = supabase.auth.user();
+
+    const getConsejo = async () => {
+        let { data: Consejo, error } = await supabase
+            .from('Consejo')
+            .select('*')
+        return { Consejo, error };
     }
-  } , [state] );
+    const getPerfil = async () => {
+        let { data: Perfil, error } = await supabase
+            .from('Perfil')
+            .select('*')
+            .eq("user_id", user?.id);
+        return { Perfil, error };
+    }
 
-  useEffect(() => {
-		if (!inMemoryToken) {
-      //should refresh token
-		}
-		const revalidateInterval = setInterval( () => {
-			if (inMemoryToken) {
-				if (
-					subMinutes( inMemoryToken.expiresInDate , 1) <=
-					new Date()
-				) {
-					//should refresh token
-          dispatch(logOut())
-				}
-			} else {
-				//should refresh
-			}
-		}, 60000);
+    const getAgenda = async () => {
+        let{Perfil} = await getPerfil();
+        let { data: Agenda, error } = await supabase
+            .from('Agenda')
+            .select('*')
+            .eq("id_consejo", Perfil[0]?.id_consejo)
+        return { Agenda, error };
+    }
+    const getPuntos = async () => {
+        let{Perfil} = await getPerfil();
+        let { data: Puntos, error } = await supabase
+            .from('Puntos')
+            .select('*')
+            .eq("id_consejo", Perfil[0]?.id_consejo)
+        return { Puntos: Puntos, error};
+    }
+    const update = async (email, password, phone) => {
+        const { user, error } = await supabase.auth.update({
+            email: email,
+            password: password,
+            phone: phone
+        })
+        return {
+            user, error
+        }
+    }
 
-		return () => clearInterval(revalidateInterval);
-	}, []);
+    const signOut = async () => {
+        const { error } = await supabase.auth.signOut()
+        return error ? false : true;
 
-  return {
-    ...state,
-    logIn: (userData) => {
-      queryClient.invalidateQueries('profile');
-      queryClient.invalidateQueries('user-addresses');
-      dispatch(logIn(userData));
-    },
-    logOut: (userData) => {
-      dispatch(logOut(userData))
-    },
-    resetError: () => dispatch(resetError()),
-    recoverPassword: (userData) => dispatch(recoverPassword(userData)),
-    signUp: (userData) => dispatch(signUp(userData)),
-    logInAsGuest: (userData) => dispatch(authLogInAsGuest(userData)),
-    hideOnboarding: () => dispatch(hideOnboarding()),
-    updateProfile: (profile) => dispatch(updateProfile(profile))
-  };
+    }
+
+    const verifyEmail = async (email) => {
+        const { user, error } = await supabase.auth.signIn({
+            email: email
+        })
+        return {
+            user,
+            error
+        }
+    };
+
+
+    return {
+        signUp,
+        signIn,
+        update,
+        signOut,
+        verifyEmail,
+        user,
+        getConsejo,
+        getPerfil,
+        getAgenda,
+        getPuntos
+    };
 };
+

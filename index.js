@@ -7,13 +7,16 @@ import { name as appName } from './app.json';
 import App from './App';
 import { Appearance } from "react-native-appearance";
 import { getTheme } from "@/theme";
+import { NotifierWrapper } from 'react-native-notifier';
 const osScheme = Appearance.getColorScheme();
 
 export default function Main() {
-  
+
   return (
     <PaperProvider theme={getTheme(osScheme)}>
-      <App />
+      <NotifierWrapper>
+        <App />
+      </NotifierWrapper>
     </PaperProvider>
   );
 }

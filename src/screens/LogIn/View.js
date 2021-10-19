@@ -16,18 +16,19 @@ import {
 } from "@/components";
 // import { Images } from '@/assets';
 import { Colors } from '@/theme';
-// import { isWeb } from "@/utils";
+import { notify } from "@/utils";
 
 const LogInView = ({
   error,
   resetError,
+  signIn,
   loading,
+  setLoading,
   navigation,
   handleChangeForm,
   shouldEnableLogin,
   email,
   password,
-  handleLogin,
   onEnterPress,
 }) => {
   return (
@@ -59,16 +60,16 @@ const LogInView = ({
               value={password}
             />
             <Spacing top={10} />
-            <Touchable
+            {/* <Touchable
               ml={15}
-            // onPress={() => {
-            //   navigation.navigate(URLS.formCompany);
-            // }}
+              onPress={() => {
+                navigation.navigate("Reset");
+              }}
             >
               <Text color={Colors.primary}>
                 Recuperar Contraseña!!!
               </Text>
-            </Touchable>
+            </Touchable> */}
 
           </Box>
 
@@ -81,9 +82,24 @@ const LogInView = ({
           bg={"#FFFFFF"}
           bc={Colors.primary}
           bw={4}
+          loading={loading}
           disableHover
-          onPress={() => {
-            handleLogin()
+          onPress={async () => {
+            setLoading(true);
+            const { user, error } = await signIn(email, password);
+            console.log(user, error );
+            setLoading(false)
+            if (user) {
+              notify.success({
+                title: "Bienvenido",
+              });
+              navigation.navigate("Dashboard");
+            } else {
+              notify.error({
+                title: error?.message,
+              });
+            }
+
           }}
         >
           <Text mt={6} fontSize={16} color={Colors.primary} center>INGRESA</Text>

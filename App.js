@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts, FONTS, Colors } from "@/theme";
 import AppLoading from 'expo-app-loading';
-import { useAuth } from '@/hooks';
+import { supabase } from "@/hooks";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 import LandingContainer from "@/screens/Landing";
@@ -40,47 +40,66 @@ const linking = {
   },
 };
 
+
+const PublicScreens = () => {
+  return <Stack.Navigator initialRouteName={"Landing"} screenOptions={{
+    headerShown: false,
+  }}>
+    <Stack.Screen name="Landing" component={LandingContainer} />
+    <Stack.Screen name="Login" component={LoginContainer} />
+    <Stack.Screen name="SingUp" component={SignUpContainer} />
+    <Stack.Screen name="Reset" component={ResetContainer} />
+  </Stack.Navigator>
+}
+
+const PrivateScreens = () => {
+  return <Stack.Navigator initialRouteName={"Dashboard"} screenOptions={{
+    headerShown: false,
+  }}>
+    <Stack.Screen name="Dashboard">
+      {() => {
+        return <Tab.Navigator screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === 'Inicio') {
+              iconName = focused
+                ? 'home'
+                : 'home-outline';
+            } else if (route.name === 'Ajustes') {
+              iconName = focused ? 'settings' : 'settings-outline';
+            }
+
+            // You can return any component that you like here!
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: Colors.primary,
+          tabBarInactiveTintColor: 'gray',
+          headerShown: false
+        })}>
+          <Tab.Screen name="Inicio" component={HomeContainer} />
+          <Tab.Screen name="Ajustes" component={SettingsContainer} />
+        </Tab.Navigator>
+      }}
+
+    </Stack.Screen>
+  </Stack.Navigator>
+}
 export default function App() {
   const [fontsLoaded] = useFonts(FONTS);
-  const { user } = useAuth();
+  const [auth, setAuth] = useState(false);
+  useEffect(() => {
+    setAuth(supabase.auth.session())
+
+    supabase.auth.onAuthStateChange((_event, session)=>{
+      setAuth(session);
+    })
+  },[]);
+
   if (!fontsLoaded) {
     return <AppLoading />;
   }
   return (<NavigationContainer linking={linking}>
-    <Stack.Navigator initialRouteName={user?.role === "authenticated" ? "Dashboard" : "Landing"} screenOptions={{
-      headerShown: false,
-    }}>
-      <Stack.Screen name="Landing" component={LandingContainer} />
-      <Stack.Screen name="Login" component={LoginContainer} />
-      <Stack.Screen name="SingUp" component={SignUpContainer} />
-      <Stack.Screen name="Reset" component={ResetContainer} />
-      <Stack.Screen name="Dashboard">
-        {() => {
-          return <Tab.Navigator screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-  
-              if (route.name === 'Inicio') {
-                iconName = focused
-                  ? 'home'
-                  : 'home-outline';
-              } else if (route.name === 'Ajustes') {
-                iconName = focused ? 'settings' : 'settings-outline';
-              }
-  
-              // You can return any component that you like here!
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: Colors.primary,
-            tabBarInactiveTintColor: 'gray',
-            headerShown: false
-          })}>
-            <Tab.Screen name="Inicio" component={HomeContainer} />
-            <Tab.Screen name="Ajustes" component={SettingsContainer} />
-          </Tab.Navigator>
-        }}
-
-      </Stack.Screen>
-    </Stack.Navigator>
+    {auth ? <PrivateScreens /> : <PublicScreens />}
   </NavigationContainer>);
 }

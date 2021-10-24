@@ -79,21 +79,17 @@ const LogInView = ({
         <Button
           self="center"
           w={"100%"}
-          bg={"#FFFFFF"}
-          bc={Colors.primary}
-          bw={4}
+          type="secondary"
           loading={loading}
           disableHover
           onPress={async () => {
             setLoading(true);
             const { user, error } = await signIn(email, password);
-            console.log(user, error );
             setLoading(false)
             if (user) {
               notify.success({
                 title: "Bienvenido",
               });
-              navigation.navigate("Dashboard");
             } else {
               notify.error({
                 title: error?.message,

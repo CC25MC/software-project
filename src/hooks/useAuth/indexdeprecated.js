@@ -10,7 +10,10 @@ export const useAuth = () => {
             data: { phone, name, cedula: id }
         })
         if (data?.user) {
-            const newRoom = await supabaseAxios.post(`/Perfil`, { nombre_c: name, user_id: data?.user.id, cedula: id, phone: phone, id_consejo: id_advice })
+            const newRoom = await supabase
+                .from('Perfil')
+                .insert({ nombre_c: name, user_id: data?.user.id, cedula: id, phone: phone, id_consejo: id_advice });
+            console.log(newRoom);
         }
         return {
             user: data?.user,
@@ -40,14 +43,14 @@ export const useAuth = () => {
     }
 
     const getAgenda = async () => {
-        let { Perfil } = await getPerfil();
+        let {Perfil} = await getPerfil();
         let { data: Agenda, error } = await supabaseAxios.get(`/Agenda?id_consejo=eq.${Perfil[0]?.id_consejo}&select=*`)
         return { Agenda, error };
     }
     const getPuntos = async () => {
-        let { Perfil } = await getPerfil();
+        let{Perfil} = await getPerfil();
         let { data: Puntos, error } = await supabaseAxios.get(`/Puntos?id_consejo=eq.${Perfil[0]?.id_consejo}&select=*`)
-        return { Puntos, error };
+        return { Puntos, error};
     }
     const update = async (email, password, phone) => {
         const { user, error } = await supabase.auth.update({

@@ -35,7 +35,7 @@ const SettingsView = ({
   const { signOut } = useAuth();
   return (
     <View style={{ backgroundColor: "white", height: "100%" }}>
-      <Header title="Ajustes" showBack={false} renderRight={<Appbar.Action icon="logout" onPress={() => { signOut(); navigation.navigate("Landing"); }} />} />
+      <Header title="Ajustes" showBack={false} renderRight={<Appbar.Action icon="logout" onPress={() => signOut()} />} />
       <Screen
         error={error}
         navigation={navigation}

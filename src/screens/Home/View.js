@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, SafeAreaView } from "react-native";
 import { Appbar, FAB, Paragraph, Dialog, Portal, Card, Title, Badge } from "react-native-paper";
-import { useAuth, supabase } from "@/hooks";
+import { useAuth, supabase, supabaseAxios } from "@/hooks";
 import { Picker } from '@react-native-picker/picker';
+import { DateTime } from "luxon";
 import {
   Touchable,
   // Col,
@@ -16,17 +17,19 @@ import {
   Spacing,
   Text,
   Screen,
+  ResponsiveImage
 } from "@/components";
-// import { Images } from '@/assets';
+import { Images } from '@/assets';
 import { Tokens, Colors } from '@/theme';
 import { isWeb, notify } from "@/utils";
 
 const Modal = ({ handleChangeForm, enunciado, updateData, mode, decision, hideDialog, close, visible, saveData }) => {
   return <Portal>
     <Dialog visible={visible} onDismiss={hideDialog}>
-      <Dialog.Title>Nueva Agenda</Dialog.Title>
+      <Dialog.Title>{mode === "update" ? "Actualizar" : "Nueva Agenda"}</Dialog.Title>
       <Dialog.Content>
-        <Paragraph>Por favor ingresa todos los puntos tratados en la reunión:</Paragraph>
+        <Paragraph>{mode === "update" ? "Actualiza los puntos tratados en la reunion de ser necesario" : "Por favor ingresa todos los puntos tratados en la reunión:"} </Paragraph>
+        <Spacing top={Tokens.unit(2)} />
         <Input
           mode="outlined"
           multiline
@@ -91,20 +94,17 @@ const HomeView = ({
   const saveData = async () => {
     const { Perfil } = await getPerfil();
     if (Perfil[0]?.nombre_c) {
-      const res = await supabase
-        .from('Puntos')
-        .insert({
-          Consejero: Perfil[0]?.nombre_c,
-          Enunciado: enunciado,
-          Decision: decision.lenght > 0 ? decision : "informacion",
-        })
+      const res = await supabaseAxios.post(`/Puntos`, {
+        Consejero: Perfil[0]?.nombre_c,
+        Enunciado: enunciado,
+        Decision: decision,
+        id_consejo: Perfil[0]?.id_consejo,
+      })
       if (res?.data) {
-        await supabase
-          .from('Agenda')
-          .insert({
-            Puntos: res?.data[0].id,
-            id_consejo: Perfil[0]?.id_consejo,
-          })
+        await supabaseAxios.post(`/Agenda`, {
+          Puntos: res?.data[0].id,
+          id_consejo: Perfil[0]?.id_consejo,
+        })
         notify.success({
           title: "Agenda Creada Satisfactoriamente",
         });
@@ -122,7 +122,7 @@ const HomeView = ({
   const getData = async () => {
     const { Puntos } = await getPuntos();
     const { Agenda } = await getAgenda();
-    console.log(Agenda, Puntos);
+    // console.log(Agenda, Puntos);
     setData(Puntos);
   }
 
@@ -131,14 +131,8 @@ const HomeView = ({
   }, []);
 
   const deleteAgenda = async (id) => {
-    await supabase
-      .from("Agenda")
-      .delete()
-      .eq('Puntos', id)
-    await supabase
-      .from("Puntos")
-      .delete()
-      .eq('id', id)
+    await supabaseAxios.delete(`/Agenda?Puntos=eq.${id}`)
+    await supabaseAxios.delete(`/Puntos?id=eq.${id}`)
     notify.success({
       title: "Agenda Eliminada Satisfactoriamente",
     });
@@ -146,7 +140,7 @@ const HomeView = ({
   }
 
   const selecAgenda = (item) => {
-    console.log(item);
+    // console.log(item);
     setValues({ consejero: item?.consejero, enunciado: item?.enunciado, decision: item?.decision, id: item?.id })
     setMode("update");
     showDialog();
@@ -169,11 +163,10 @@ const HomeView = ({
   }
   const Item = ({ consejero, date, enunciado, decision, id }) => {
     let LeftContent = props => <Badge {...props} style={{ marginRight: 10, }} >{decision}</Badge>;
-
     return (
-      <Card style={{ top: 10, marginBottom: 20 }}>
+      <Card style={{ marginBottom: 20 }}>
         <Card>
-          <Card.Title title={`Agenda Del dia ${date}`} subtitle={`Por el consejero ${consejero}`} right={LeftContent} />
+          <Card.Title title={`Agenda Del día ${date}`} subtitle={`Por el consejero ${consejero}`} right={LeftContent} />
           <Card.Content>
             <Title>Puntos</Title>
             <Paragraph>{enunciado}</Paragraph>
@@ -187,7 +180,8 @@ const HomeView = ({
     );
   }
   const renderItem = ({ item }) => (
-    <Item consejero={item.Consejero} date={item?.created_at} enunciado={item?.Enunciado} decision={item?.Decision} id={item?.id} />
+
+    <Item consejero={item.Consejero} date={DateTime.fromISO(item?.created_at).toLocaleString(DateTime.DATE_FULL)} enunciado={item?.Enunciado} decision={item?.Decision} id={item?.id} />
   );
 
   if (!data) {
@@ -200,11 +194,30 @@ const HomeView = ({
 
   return (
     <View style={{ backgroundColor: "white", height: "100%" }}>
-      <Header title="Inicio" showBack={false} renderRight={<Appbar.Action icon="logout" onPress={() => { signOut(); navigation.navigate("Landing"); }} />} />
-      <SafeAreaView style={{ height: "100%", backgroundColor: "white", paddingLeft: 20, paddingRight: 20 }}>
+      <Header title="Inicio" showBack={false} renderRight={<Appbar.Action icon="logout" onPress={() => signOut()} />} />
+      <SafeAreaView style={{ height: "100%", backgroundColor: "white", paddingTop: 40, paddingLeft: 20, paddingRight: 20, paddingBottom: 40 }}>
         <FlatList
           showsVerticalScrollIndicator={false}
           data={data}
+          ListEmptyComponent={
+            <Box>
+              <Text fontSize={36} center>
+                Upss!!! no hay nada por aqui, por favor crea una nueva Agenda.
+              </Text>
+              <Spacing top={Tokens.unit(5)} />
+
+              <ResponsiveImage
+                initialWidth={isWeb() ? 400 : 200}
+                initialHeight={isWeb() ? 400 : 200}
+                source={Images.list}
+                containerProps={{
+                  self: "center",
+                  top: -0,
+                  mr: 5,
+                }}
+              />
+            </Box>
+          }
           renderItem={renderItem}
           keyExtractor={item => item.id}
         />

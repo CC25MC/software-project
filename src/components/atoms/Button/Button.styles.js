@@ -20,12 +20,12 @@ export const getStyleSheet = (colorOnHover) => {
     "text-primary-hover": {},
 
     "button-secondary": {
-      borderColor: Colors.gray,
+      borderColor: Colors.primary,
       borderWidth: 1,
       borderRadius: 50,
     },
     "button-secondary-hover": {
-      backgroundColor: colorOnHover,
+      backgroundColor: lighten(Colors.primary,50),
       borderColor: colorOnHover,
     },
     "text-secondary": {},

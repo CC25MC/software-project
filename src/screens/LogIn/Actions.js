@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks";
 
 const LogInActions = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, setAuth } = useAuth();
   const [values, setValues] = useState({
     password: "",
     email: "",
@@ -23,6 +23,7 @@ const LogInActions = ({ navigation }) => {
     signIn,
     loading, 
     setLoading,
+    setAuth,
     navigation,
     password,
     email,

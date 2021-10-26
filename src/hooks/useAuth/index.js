@@ -34,6 +34,10 @@ export const useAuth = () => {
         let { data: Consejo, error } = await supabaseAxios.get("/Consejo")
         return { Consejo, error };
     }
+    const getConsejoId = async (id) => {
+        let { data: Consejo, error } = await supabaseAxios.get(`/Consejo?id=eq.${id}`)
+        return { Consejo, error };
+    }
     const getPerfil = async () => {
         let { data: Perfil, error } = await supabaseAxios.get(`/Perfil?user_id=eq.${user?.id}`)
         return { Perfil, error };
@@ -85,6 +89,7 @@ export const useAuth = () => {
         verifyEmail,
         user,
         getConsejo,
+        getConsejoId,
         getPerfil,
         getAgenda,
         getPuntos

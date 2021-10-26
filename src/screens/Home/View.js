@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, SafeAreaView } from "react-native";
+import { View, FlatList, SafeAreaView, Platform } from "react-native";
 import { Appbar, FAB, Paragraph, Dialog, Portal, Card, Title, Badge } from "react-native-paper";
 import { useAuth, supabase, supabaseAxios } from "@/hooks";
 import { Picker } from '@react-native-picker/picker';
@@ -94,15 +94,29 @@ const HomeView = ({
   const saveData = async () => {
     const { Perfil } = await getPerfil();
     if (Perfil[0]?.nombre_c) {
-      const res = await supabaseAxios.post(`/Puntos`, {
-        Consejero: Perfil[0]?.nombre_c,
-        Enunciado: enunciado,
-        Decision: decision,
-        id_consejo: Perfil[0]?.id_consejo,
-      })
-      if (res?.data) {
-        await supabaseAxios.post(`/Agenda`, {
-          Puntos: res?.data[0].id,
+      if (Platform.OS === "web") {
+        const { data, error } = await supabase
+          .from('Puntos')
+          .insert({
+            Consejero: Perfil[0]?.nombre_c,
+            Enunciado: enunciado,
+            Decision: decision,
+            id_consejo: Perfil[0]?.id_consejo,
+          })
+        if (data[0]?.id) {
+          await supabaseAxios.post(`/Agenda`, {
+            Puntos: data[0].id,
+            id_consejo: Perfil[0]?.id_consejo,
+          })
+          notify.success({
+            title: "Agenda Creada Satisfactoriamente",
+          });
+        }
+      } else {
+        const { data } = await supabaseAxios.post(`/Puntos`, {
+          Consejero: Perfil[0]?.nombre_c,
+          Enunciado: enunciado,
+          Decision: decision,
           id_consejo: Perfil[0]?.id_consejo,
         })
         notify.success({
@@ -147,15 +161,27 @@ const HomeView = ({
   }
 
   const updateData = async () => {
+    if (Platform.OS === "web") {
+      const { data, error } = await supabase
+        .from('Puntos')
+        .update({ Enunciado: enunciado, Decision: decision })
+        .eq('id', values?.id)
 
-    const { data, error } = await supabase
-      .from('Puntos')
-      .update({ Enunciado: enunciado, Decision: decision })
-      .eq('id', values?.id)
+      if (error) {
+        notify.error({
+          title: "Ocurrio un error intentando actualizar",
+        });
+      } else {
+        notify.success({
+          title: "Agenda Actualizada Satisfactoriamente",
+        });
+      }
+    } else {
+      notify.error({
+        title: "Ocurrio un error al intentar actualizar"
+      });
+    }
 
-    notify.success({
-      title: "Agenda Actualizada Satisfactoriamente",
-    });
     getData();
     setMode("savedata");
     hideDialog();
@@ -181,7 +207,7 @@ const HomeView = ({
   }
   const renderItem = ({ item }) => (
 
-    <Item consejero={item.Consejero} date={DateTime.fromISO(item?.created_at).toLocaleString(DateTime.DATE_FULL)} enunciado={item?.Enunciado} decision={item?.Decision} id={item?.id} />
+    <Item consejero={item.Consejero} date={Platform.OS === "web" ? DateTime.fromISO(item?.created_at).toLocaleString(DateTime.DATE_FULL) : item?.created_at} enunciado={item?.Enunciado} decision={item?.Decision} id={item?.id} />
   );
 
   if (!data) {

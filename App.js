@@ -14,6 +14,8 @@ import SignUpContainer from "./src/screens/SignUp";
 import ResetContainer from "./src/screens/Reset";
 import HomeContainer from "./src/screens/Home";
 import SettingsContainer from "./src/screens/Settings";
+import ConsejoContainer from "./src/screens/Consejo";
+import ProfileContainer from "./src/screens/Profile";
 
 const linking = {
   prefixes: ["", ""],
@@ -23,6 +25,8 @@ const linking = {
       ["Login"]: "Login",
       ["SingUp"]: "SingUp",
       ["Reset"]: "Reset",
+      ["Perfil"]: "Perfil",
+      ["Consejo"]: "Consejo",
       ["Dashboard"]: {
         path: "Dashboard",
         screens: {
@@ -81,8 +85,11 @@ const PrivateScreens = () => {
           <Tab.Screen name="Ajustes" component={SettingsContainer} />
         </Tab.Navigator>
       }}
-
+      {/* <Stack.Screen name="Profile" component={LandingContainer} /> */}
+      {/* <Stack.Screen name="Consejo" component={ConsejoContainer} /> */}
     </Stack.Screen>
+    <Stack.Screen name="Consejo" component={ConsejoContainer} />
+    <Stack.Screen name="Perfil" component={ProfileContainer} />
   </Stack.Navigator>
 }
 export default function App() {

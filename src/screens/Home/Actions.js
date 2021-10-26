@@ -5,7 +5,7 @@ const HomeActions = ({ navigation }) => {
   const [values, setValues] = useState({
     consejero: "",
     enunciado: "",
-    decision: "",
+    decision: "informacion",
   });
 
   const {
